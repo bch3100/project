@@ -5,6 +5,8 @@ import numpy as np
 #single_tnoe_detector 의 리턴값은 멜로디 정보를 포함하는 2차원 배열
 #pronunciation_insert 의 리턴값은 멜로디와 발음 정보를 포함하는 3차원 배열
 
+#모든 출력값들은 행은 마디, 열은 일단 한 박자 단위로 출력한다.
+
 class MRStructure:
     def __init__(self, MR_file = None, time_sig = None, key_sig = None, bpm = None, length = None, bars = None):
         self.y, self.sr = lb.load(MR_file)
@@ -271,12 +273,23 @@ chord_table = {
 pitch_table = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 
+
+
 #예시) 임의로 설정할 수도 있다
-#MR_structure bar. 첫 행과 마지막 행은 비워둠
+
+time_signature = '4/4'
+key_signature = 'C'
+tempo = 120 #BPM
+length = 60 #초단위
+
+#MR_structure bar. 첫 행과 마지막 행은 비워둠. 파일로 생성해도 마지막 행을 제외하고 비슷한 형식으로 만들어짐
 MR_bars = [[None, None, None, None],
         ['C', 'D', 'E', 'F'],
         ['G', 'A', 'B', 'C'],
         [None, None, None, None]]
+
+#위의 다차원 배열과 정보들로 인스턴스 생성
+test_MR = MRStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, length=length, bars=MR_bars)
 
 #single_tnoe_detector. MR_structure과 다르게 첫 행은 비워두지 않음
 Vocal_line = [['C1', 'D1', 'E1', 'F1'],
@@ -287,3 +300,16 @@ Vocal_line = [['C1', 'D1', 'E1', 'F1'],
 Vocal_with_pronounce = [[['C1', '아'], ['D1', '아'], ['E1', '아'], ['F1', '아']],
                         [['G1', '아'], ['A1', '아'], ['B1', '아'], ['C2', '아']],
                         [[None, None], [None, None], [None, None], [None, None]]]
+
+
+#파일로부터 생성하는 법
+
+#MR_path = 'MR_path.mp3'
+#test = MRStructure(MR_path, time_sig=time_signature, key_sig=key_signature) 단, 최소한 time_signature과 key_signature는 직접 입력
+
+
+#Vocal_path = 'Vocal_path.mp3'
+#test_Vocal = single_tone_detector(Vocal_path, test.time_signature, test.key_signature, test.tempo) 파일과 MR 정보로 생성
+
+
+#test_Vocal_with_pronounce = pronunciation_insert(test_Vocal)
