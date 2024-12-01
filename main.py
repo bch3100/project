@@ -1,25 +1,49 @@
-import subprocess
 import os
+import subprocess
+from pydub import AudioSegment
 
-# Voice 폴더 경로 설정
-voice_folder = os.path.join(os.getcwd(), "voice")
+# 두 개의 프로그램 파일 경로를 지정합니다.
+FIRST_PROGRAM_PATH = './first_program.py'
+SECOND_PROGRAM_PATH = './second_program.py'
 
-# Voice 폴더 내의 mp3 파일 목록 가져오기
-audio_files = [f for f in os.listdir(voice_folder) if f.endswith('.mp3')]
+# 음성 파일을 가져오는 함수입니다.
+def get_audio_file():
+    current_directory = os.getcwd()
+    for file in os.listdir(current_directory):
+        if file.endswith(".wav") or file.endswith(".mp3"):
+            return os.path.join(current_directory, file)
+    return None
 
-# 새로운 음성 파일 설정
-if len(audio_files) < 1:
-    print("voice 폴더에 최소 1개의 mp3 파일이 있어야 합니다.")
-    exit()
+def main():
+    # 음성 파일을 찾습니다.
+    audio_file = get_audio_file()
+    if not audio_file:
+        print("음성 파일을 찾을 수 없습니다. .wav 또는 .mp3 파일을 추가해주세요.")
+        return
 
-input_audio = os.path.join(voice_folder, audio_files[0])
-existing_audio = os.path.join(voice_folder, "existing_audio.mp3")
+    # 첫 번째 프로그램 실행
+    first_command = ['python', FIRST_PROGRAM_PATH, audio_file]
+    try:
+        first_result = subprocess.check_output(first_command, text=True).strip()
+        print("첫 번째 프로그램 결과:", first_result)
+    except subprocess.CalledProcessError as e:
+        print("첫 번째 프로그램 실행 중 오류가 발생했습니다:", e)
+        return
 
-generated_audio = os.path.join(voice_folder, "generated_audio.mp3")
+    # 두 번째 프로그램 실행
+    second_command = ['python', SECOND_PROGRAM_PATH, audio_file, first_result]
+    try:
+        second_result = subprocess.check_output(second_command, text=True).strip()
+        print("두 번째 프로그램 결과:", second_result)
+    except subprocess.CalledProcessError as e:
+        print("두 번째 프로그램 실행 중 오류가 발생했습니다:", e)
+        return
 
-# 첫 번째 프로그램 실행 - 새로운 음성 파일 생성
-subprocess.run(["python", "harmony_generator.py", input_audio, existing_audio, generated_audio])
+    # 두 번째 결과를 mp3 파일로 저장합니다.
+    output_audio = AudioSegment.from_file(audio_file)
+    output_file_path = os.path.join(os.getcwd(), "second_result.mp3")
+    output_audio.export(output_file_path, format="mp3")
+    print(f"두 번째 결과를 {output_file_path}에 저장했습니다.")
 
-# 두 번째 프로그램 실행 - 두 개의 음성 파일을 합치는 작업
-combined_output = os.path.join(voice_folder, "output_combined.mp3")
-subprocess.run(["python", "audio_processor.py", generated_audio, existing_audio, combined_output])
+if __name__ == "__main__":
+    main()
