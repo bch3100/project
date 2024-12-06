@@ -7,12 +7,12 @@ import numpy as np
 #모든 출력값들은 행은 마디, 열은 일단 한 박자 단위로 출력한다.
 
 class MRStructure:
-    def __init__(self, MR_file = None, time_sig = None, key_sig = None, bpm = None, slice = 4, bars = None):
+    def __init__(self, MR_file = None, time_sig = None, key_sig = None, bpm = None, MR_slice = 4, bars = None):
         self.y, self.sr = lb.load(MR_file) if MR_file is not None else (None, None)
         self.time_signature = self.set_time_signature(time_sig)
         self.key_signature = self.set_key_signature(key_sig)
         self.tempo = self.set_tempo(bpm)
-        self.slice = slice
+        self.MRslice = MR_slice
         self.bar = self.set_bar(bars)
         
     def set_time_signature(self, Ts = None):
@@ -49,10 +49,10 @@ class MRStructure:
             beat_count, beat_value = map(int, self.time_signature.split('/'))
             bar_duration = (beat_count / beat_value * 4) * beat_duration
             sample_per_bar = int(bar_duration * self.sr)
-            sample_per_slice = int(sample_per_bar / (beat_count / beat_value * self.slice))
+            sample_per_slice = int(sample_per_bar / (beat_count / beat_value * self.MRslice))
 
             bar_count = (len(self.y) // sample_per_bar) + 2
-            bar_slices= int(float(beat_count / beat_value) * self.slice)
+            bar_slices= int(float(beat_count / beat_value) * self.MRslice)
             bars = np.full((bar_count, bar_slices), None)
 
             trimmed_audio, index = lb.effects.trim(self.y, top_db=20)
@@ -106,29 +106,30 @@ class MRStructure:
                         if chord == chord_list[k]:
                             self.bar[i][j] = chord_list[(k + key * 5) % len(chord_list)]
 
-    def moreslice(self, slice):
-        if slice <= 1:
+    def moreslice(self, slices):
+        if slices <= 1:
             return
         
-        bar_count = len(self.bar[0])
+        bar_count = len(self.bar)
         new_bar = []
 
         for i in range(bar_count):
             new_slices = []
-            for j in range(self.slice):
-                new_slices.extend([self.bar[i][j]] * slice)
+            for j in range(len(self.bar[i])):
+                new_slices.extend([self.bar[i][j]] * slices)
             new_bar.append(new_slices)
         
         return new_bar
     
-def MR_sampling(bar, start, count, slice):
+
+def MR_sampling(bar, start, count, slices):
     sample = []
     i = start[0]
     j = start[1]
     while len(sample) < count:
         sample.append(bar[i][j])
-        i += (j + 1) // slice
-        j = (j + 1) % slice
+        i += (j + 1) // slices
+        j = (j + 1) % slices
     return sample
 
 def chord_detector(chroma_sum):
@@ -151,12 +152,12 @@ def chord_detector(chroma_sum):
 
 
 class VocalStructure:
-    def __init__(self, Vocal_file = None, time_sig = None, key_sig = None, bpm = None, slice = 4, line = None):
+    def __init__(self, Vocal_file = None, time_sig = None, key_sig = None, bpm = None, Vocal_slice = 4, line = None):
         self.y, self.sr = lb.load(Vocal_file) if Vocal_file is not None else (None, None)
         self.time_signature = self.set_time_signature(time_sig)
         self.key_signature = self.set_key_signature(key_sig)
         self.tempo = self.set_tempo(bpm)
-        self.slice = slice
+        self.Vocalslice = Vocal_slice
         self.line = self.set_line(line)
         
     def set_time_signature(self, Ts = None):
@@ -189,8 +190,8 @@ class VocalStructure:
             self.line = line
             return self.line
         
-        beat_duration = 60.0 / tempo
-        sample_per_slice = int(beat_duration * self.sr / self.slice)
+        beat_duration = 60.0 / self.tempo
+        sample_per_slice = int(beat_duration * self.sr / self.Vocalslice)
 
         slices_count = (len(self.y) // sample_per_slice + 1)
         notes = [None] * slices_count
@@ -215,7 +216,7 @@ class VocalStructure:
 
         return notes
 
-    def Vocal_transpose(self, key):
+    def pitch_transpose(self, key):
         index = None
         for i in range(len(pitch_table)):
             if self.key_signature == pitch_table[i]:
@@ -239,13 +240,26 @@ class VocalStructure:
                         new_octave = octave + (j + key) // len(pitch_table)
                         break
                 self.line[i] = f"{new_pitch}{new_octave}"
+
         return self.line     
 
-    def chorus_generator(self, sampled_MR, key):
+    def octave_transpose(self, key):
         if key == 0:
             return self.line
+        
+        for i in range(len(self.line)):
+            if self.line[i] is None: 
+                    continue
+            else:
+                note = self.line[i]
+                pitch = note[:-1]
+                octave = int(note[-1]) + key
+                self.line[i] = f"{pitch}{octave}"
 
-        m = len(chord_scale_table['C'])
+        return self.line
+
+
+    def chorus_generator(self, sampled_MR):
         n = len(self.line)
         chorus = [None] * n
 
@@ -255,17 +269,22 @@ class VocalStructure:
             
             else:
                 chord = sampled_MR[i]
+                m = len(chord_scale_table[chord])
+
                 note = self.line[i]
                 pitch = note[:-1]
                 octave= int(note[-1])
-                new_pitch = pitch
-                new_octave = octave
                 
+                index = 0
+                new_pitch = chord_scale_table[chord][index]
+                new_octave = octave
+
                 for j in range(m):
-                    if pitch == chord_scale_table[chord][j]:
-                        new_pitch = chord_scale_table[chord][(j + key) % m]
-                        new_octave = octave
-                        break
+                    if  -2 < pitch_table.index(pitch) - pitch_table.index(new_pitch) < 2:
+                        new_pitch = chord_scale_table[chord][index + j]
+
+                if pitch_table.index(pitch) < pitch_table.index(new_pitch) :
+                    new_octave -= 1
 
             chorus[i] = f"{new_pitch}{new_octave}"
         return chorus
@@ -300,8 +319,8 @@ def transpose(MR, Vocal, key):
 
 
 def Synchronize(MR, Vocal, start):
-    bars = MR.moreslice(int(Vocal.slice * 4 / MR.slice))
-    sampled_bar = MR_sampling(bars, start, len(Vocal.line), Vocal.slice * 4)
+    bars = MR.moreslice(int(Vocal.Vocalslice * 4 / MR.MRslice))
+    sampled_bar = MR_sampling(bars, start, len(Vocal.line), Vocal.Vocalslice * 4)
 
     return sampled_bar
     
@@ -325,77 +344,77 @@ chord_list = ['C', 'Cm', 'Caug', 'Cdim', 'Csus4'
               'B', 'Bm', 'Baug', 'Bdim', 'Bsus4']
     
 chord_scale_table = {
-    'C':     ['C', 'D', 'E', 'F', 'G', 'A', 'B'], 
-    'Cm':    ['C', 'D', 'D#', 'F', 'G', 'G#', 'A#'],
-    'Caug':  ['C', 'E', 'G#', 'C', 'E', 'G#', 'C'],
-    'Cdim':  ['C', 'D#', 'F#', 'C', 'D#', 'F#', 'C'],
-    'Csus4': ['C', 'F', 'G', 'C', 'F', 'G', 'C'],
+    'C':     ['C', 'E', 'G'], 
+    'Cm':    ['C', 'D#', 'G'],
+    'Caug':  ['C', 'E', 'G#'],
+    'Cdim':  ['C', 'D#', 'F#'],
+    'Csus4': ['C', 'F', 'G'],
     #
-    'C#':    ['C#', 'D#', 'F', 'F#', 'G#', 'A#', 'C'],
-    'C#m':   ['C#', 'D#', 'E', 'F#', 'G#', 'A', 'B'],
-    'C#aug': ['C#', 'F', 'A', 'C#', 'F', 'A', 'C#'],
-    'C#dim': ['C#', 'E', 'G', 'C#', 'E', 'G', 'C#'],
-    'C#sus4':['C#', 'F#', 'G#', 'C#', 'F#', 'G#', 'C#'],
+    'C#':    ['C#', 'F', 'G#'],
+    'C#m':   ['C#', 'E', 'G#'],
+    'C#aug': ['C#', 'F', 'A'],
+    'C#dim': ['C#', 'E', 'G'],
+    'C#sus4':['C#', 'F#', 'G#'],
     #
-    'D':     ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
-    'Dm':    ['D', 'E', 'F', 'G', 'A', 'A#', 'C'],
-    'Daug':  ['D', 'F#', 'A#', 'D', 'F#', 'A#', 'D'],
-    'Ddim':  ['D', 'F', 'G#', 'D', 'F', 'G#', 'D'],
-    'Dsus4': ['D', 'G', 'A', 'D', 'G', 'A', 'D'],
+    'D':     ['D', 'F#', 'A'],
+    'Dm':    ['D', 'F', 'A'],
+    'Daug':  ['D', 'F#', 'A#'],
+    'Ddim':  ['D', 'F', 'G#'],
+    'Dsus4': ['D', 'G', 'A'],
     #
-    'D#':    ['D#', 'F', 'G', 'G#', 'A#', 'C', 'D'],
-    'D#m':   ['D#', 'F', 'F#', 'G#', 'A#', 'B', 'C#'],
-    'D#aug': ['D#', 'G', 'B', 'D#', 'G', 'B', 'D#'],
-    'D#dim': ['D#', 'F#', 'A', 'D#', 'F#', 'A', 'D#'],
-    'D#sus4':['D#', 'G#', 'A#', 'D#', 'G#', 'A#', 'D#'],
+    'D#':    ['D#', 'G', 'A#'],
+    'D#m':   ['D#', 'F#', 'A#'],
+    'D#aug': ['D#', 'G', 'B'],
+    'D#dim': ['D#', 'F#', 'A'],
+    'D#sus4':['D#', 'G#', 'A#'],
     #
-    'E':     ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
-    'Em':    ['E', 'F#', 'G', 'A', 'B', 'C', 'D'],
-    'Eaug':  ['E', 'G#', 'C', 'E', 'G#', 'C', 'E'],
-    'Edim':  ['E', 'G', 'A#', 'E', 'G', 'A#', 'E'],
-    'Esus4': ['E', 'A', 'B', 'E', 'A', 'B', 'E'],
+    'E':     ['E', 'G#', 'B'],
+    'Em':    ['E', 'G', 'B'],
+    'Eaug':  ['E', 'G#', 'C'],
+    'Edim':  ['E', 'G', 'A#'],
+    'Esus4': ['E', 'A', 'B'],
     #
-    'F':     ['F', 'G', 'A', 'A#', 'C', 'D', 'E'],
-    'Fm':    ['F', 'G', 'A', 'A#', 'C', 'D', 'D#'],
-    'Faug':  ['F', 'A', 'C#', 'F', 'A', 'C#', 'F'],
-    'Fdim':  ['F', 'A', 'C', 'F', 'A', 'C', 'F'],
-    'Fsus4': ['F', 'A#', 'C', 'F', 'A#', 'C', 'F'],
+    'F':     ['F', 'A', 'C'],
+    'Fm':    ['F', 'G#', 'C'],
+    'Faug':  ['F', 'A', 'C#'],
+    'Fdim':  ['F', 'G#', 'B'],
+    'Fsus4': ['F', 'A#', 'C'],
     #
-    'F#':    ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'F'],
-    'F#m':   ['F#', 'G#', 'A', 'B', 'C#', 'D', 'E'],
-    'F#aug': ['F#', 'A#', 'D', 'F#', 'A#', 'D', 'F#'],
-    'F#dim': ['F#', 'A', 'C', 'F#', 'A', 'C', 'F#'],
-    'F#sus4':['F#', 'B', 'C#', 'F#', 'B', 'C#', 'F#'],
+    'F#':    ['F#', 'A#', 'C#'],
+    'F#m':   ['F#', 'A', 'C#'],
+    'F#aug': ['F#', 'A#', 'D'],
+    'F#dim': ['F#', 'A', 'C'],
+    'F#sus4':['F#', 'B', 'C#'],
     #
-    'G':     ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
-    'Gm':    ['G', 'A', 'A#', 'C', 'D', 'D#', 'F'],
-    'Gaug':  ['G', 'B', 'D#', 'G', 'B', 'D#', 'G'],
-    'Gdim':  ['G', 'A#', 'C', 'G', 'A#', 'C', 'G'],
-    'Gsus4': ['G', 'C', 'D', 'G', 'C', 'D', 'G'],
+    'G':     ['G', 'B', 'D'],
+    'Gm':    ['G', 'A#', 'D'],
+    'Gaug':  ['G', 'B', 'D#'],
+    'Gdim':  ['G', 'A#', 'C'],
+    'Gsus4': ['G', 'C', 'D'],
     #
-    'G#':    ['G#', 'A#', 'C', 'C#', 'D#', 'F', 'G'],
-    'G#m':   ['G#', 'A#', 'B', 'C#', 'D#', 'E', 'F#'],
-    'G#aug': ['G#', 'C', 'E', 'G#', 'C', 'E', 'G#'],
-    'G#dim': ['G#', 'B', 'D', 'G#', 'B', 'D', 'G#'],
-    'G#sus4':['G#', 'C#', 'D#', 'G#', 'C#', 'D#', 'G#'],
+    'G#':    ['G#', 'C', 'D#'],
+    'G#m':   ['G#', 'B', 'D#'],
+    'G#aug': ['G#', 'E', 'G#'],
+    'G#dim': ['G#', 'B', 'D'],
+    'G#sus4':['G#', 'C#', 'D#'],
     #
-    'A':     ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
-    'Am':    ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-    'Aaug':  ['A', 'C#', 'E#', 'A', 'C#', 'E#', 'A'],
-    'Adim':  ['A', 'C', 'E', 'A', 'C', 'E', 'A'],
-    'Asus4': ['A', 'D', 'E', 'A', 'D', 'E', 'A'],
+    'A':     ['A', 'C#', 'E'],
+    'Am':    ['A', 'C', 'E'],
+    'Aaug':  ['A', 'C#', 'E#'],
+    'Adim':  ['A', 'C', 'E'],
+    'Asus4': ['A', 'D', 'E'],
     #
-    'A#':    ['A#', 'C', 'D', 'D#', 'F', 'G', 'A'],
-    'A#m':   ['A#', 'C', 'C#', 'D#', 'F', 'F#', 'G#'],
-    'A#aug': ['A#', 'D', 'F#', 'A#', 'D', 'F#', 'A#'],
-    'A#dim': ['A#', 'C#', 'E', 'A#', 'C#', 'E', 'A#'],
-    'A#sus4':['A#', 'D#', 'F', 'A#', 'D#', 'F', 'A#'],
+    'A#':    ['A#', 'D', 'F'],
+    'A#m':   ['A#', 'C#', 'F'],
+    'A#aug': ['A#', 'D', 'F#'],
+    'A#dim': ['A#', 'C#', 'E'],
+    'A#sus4':['A#', 'D#', 'F'],
     #
-    'B':     ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'],
-    'Bm':    ['B', 'C#', 'D', 'E', 'F#', 'G', 'A'],
-    'Baug':  ['B', 'D#', 'G', 'B', 'D#', 'G', 'B'],
-    'Bdim':  ['B', 'D', 'F', 'B', 'D', 'F', 'B'],
-    'Bsus4': ['B', 'E', 'F#', 'B', 'E', 'F#', 'B'],
+    'B':     ['B', 'D#', 'F#'],
+    'Bm':    ['B', 'D', 'F#'],
+    'Baug':  ['B', 'D#', 'G'],
+    'Bdim':  ['B', 'D', 'F'],
+    'Bsus4': ['B', 'E', 'F#'],
 }
 
 chroma_chord_table = {
@@ -478,27 +497,27 @@ chroma_chord_table = {
 
 #예시) 임의로 설정할 수도 있다
 
-time_signature = '4/4'
-key_signature = 'C'
-tempo = 120 #BPM
+# time_signature = '4/4'
+# key_signature = 'C'
+#tempo = 120 #BPM
 
 #MRStructure bar : 첫 행과 마지막 행은 비워둠. 파일로 생성해도 마지막 행을 제외하고 비슷한 형식으로 만들어짐
-MR_bars = [[None, None, None, None],
-        ['C', 'D', 'E', 'F'],
-        ['G', 'A', 'B', 'C'],
-        [None, None, None, None]]
+# MR_bars = [[None, None, None, None],
+#         ['C', 'D', 'E', 'F'],
+#         ['G', 'A', 'B', 'C'],
+#         [None, None, None, None]]
 
-test_MR = MRStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, slice=2, bars=MR_bars)
+# test_MR = MRStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, MR_slice=2, bars=MR_bars)
 
 #VocalStructure bar : 1차원 배열
-Vocal_line = ['C1', 'D1', 'E1', 'F1', 'G1', 'A1', 'B1', 'C2']
+# Vocal_line = ['C1', 'D1', 'E1', 'F1', 'G1', 'A1', 'B1', 'C2']
 
-test_Vocal = VocalStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, slice=2, line=Vocal_line)
+# test_Vocal = VocalStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, Vocal_slice=2, line=Vocal_line)
 
 #파일로부터 생성하는 법
 
 #MR_path = 'MR_path.mp3'
 #test = MRStructure(MR_path, time_sig=time_signature, key_sig=key_signature) 최소한 time_signature과 key_signature는 직접 입력
 
-#'Vocal_path.mp3'
-#test_Vocal = VocalStructure(Vocal_path, time_sig=time_signature, key_sig=key_signature) 최소한 time_signature과 key_signature는 직접 입력
+# Vocal_path = 'Vocal_path.mp3'
+# test_Vocal = VocalStructure(Vocal_file=Vocal_path, time_sig=time_signature, key_sig=key_signature) #최소한 time_signature과 key_signature는 직접 입력
