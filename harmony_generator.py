@@ -507,12 +507,12 @@ chroma_chord_table = {
 #         ['G', 'A', 'B', 'C'],
 #         [None, None, None, None]]
 
-# test_MR = MRStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, MR_slice=2, bars=MR_bars)
+# test_MR = MRStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, MR_slice=4, bars=MR_bars)
 
 #VocalStructure bar : 1차원 배열
 # Vocal_line = ['C1', 'D1', 'E1', 'F1', 'G1', 'A1', 'B1', 'C2']
 
-# test_Vocal = VocalStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, Vocal_slice=2, line=Vocal_line)
+# test_Vocal = VocalStructure(time_sig=time_signature, key_sig=key_signature, bpm=tempo, Vocal_slice=1, line=Vocal_line)
 
 #파일로부터 생성하는 법
 
@@ -521,3 +521,21 @@ chroma_chord_table = {
 
 # Vocal_path = 'Vocal_path.mp3'
 # test_Vocal = VocalStructure(Vocal_file=Vocal_path, time_sig=time_signature, key_sig=key_signature) #최소한 time_signature과 key_signature는 직접 입력
+
+
+#====================================================================#
+
+MR_test = MRStructure(MR_file="sample\\sample_MR.mp3", time_sig='4/4', key_sig='C#', MR_slice=2)
+print(MR_test.bar)
+print(MR_test.tempo)
+
+line = ['G#0', 'G#0', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'C#1', 'D#1','F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'C#1', 'C1', 'A#0', 'G#0', 'G#0','C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1','G#0', 'G#0', 'C#1', 'C#1', 'C#1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1'] 
+
+test_vocal = VocalStructure(line = line ,time_sig='4/4', key_sig='C#', bpm = MR_test.tempo, Vocal_slice=2)
+
+sampled_MR = Synchronize(MR_test, test_vocal, [0,6])
+print(sampled_MR)
+
+print(test_vocal.chorus_generator(sampled_MR=sampled_MR))
+
+#====================================================================#
