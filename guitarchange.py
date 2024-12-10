@@ -1,19 +1,7 @@
+import sys
 import os
 import time
 import simpleaudio as sa
-
-# 음계 리스트
-twinkle_star_notes = [
-    'G#0', 'G#0', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'C#1', 'D#1',
-    'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1',
-    'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1',
-    'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1',
-    'C#1', 'C1', 'A#0', 'G#0', 'G#0', 'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1',
-    'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1',
-    'G#0', 'G#0', 'C#1', 'C#1', 'C#1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1',
-    'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1',
-    'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1'
-]
 
 def get_wav_files(directory):
     """지정된 디렉토리에서 .wav 파일 경로를 반환"""
@@ -24,28 +12,59 @@ def get_wav_files(directory):
             wav_files[note.upper()] = os.path.join(directory, file)
     return wav_files
 
-def play_notes(wav_files, notes, interval=0.5):
-    """지정된 음계 리스트를 간격(interval)으로 재생"""
-    play_objects = []
+def play_notes_with_background(mr_audio_file, wav_files, notes, interval=0.5):
+    """
+    MR 파일과 음계 배열을 동시에 재생
+    - mr_audio_file: MR 파일 경로
+    - wav_files: 음계 파일 경로 딕셔너리
+    - notes: 재생할 음계 리스트
+    - interval: 음계 간 재생 간격
+    """
+    # MR 재생 시작
+    wave_obj = sa.WaveObject.from_wave_file(mr_audio_file)
+    mr_play_obj = wave_obj.play()
 
+    # 음계 재생
+    play_objects = []
     for note in notes:
         if note in wav_files:
             wave_obj = sa.WaveObject.from_wave_file(wav_files[note])
-            play_obj = wave_obj.play()  # 음 재생 시작
+            play_obj = wave_obj.play()
             play_objects.append(play_obj)
-            time.sleep(interval)  # 간격 설정
+            time.sleep(interval)
         else:
-            print(f"Note {note} not found in wav files.")
+            print(f"Note {note} not found in WAV files.")
 
-    # 모든 음이 재생 종료될 때까지 대기
+    # 음계가 모두 끝날 때까지 대기
     for play_obj in play_objects:
         play_obj.wait_done()
 
-if __name__ == "__main__":
-    directory = r"C:\\Users\\USER\\Desktop\\opensource\\project\\Music\\Guitar"
-    wav_files = get_wav_files(directory)
+    # MR 재생이 끝날 때까지 대기
+    mr_play_obj.wait_done()
+
+def main():
+    # 두 번째 프로그램의 입력값 처리
+    if len(sys.argv) < 3:
+        print("Usage: python second_program.py <mr_audio_file> <notes_array>")
+        return
+
+    mr_audio_file = sys.argv[1]
+    notes_array_string = sys.argv[2]
+    notes_array = [item.strip() for item in notes_array_string.split(',')]
+
+    # 음계 파일 디렉토리 설정 (상대 경로)
+    wav_directory = os.path.join('.', 'Music', 'Guitar')
+    wav_files = get_wav_files(wav_directory)
 
     if not wav_files:
-        print("No wav files found in the directory.")
-    else:
-        play_notes(wav_files, twinkle_star_notes, interval=0.5)
+        print("음계 파일이 존재하지 않습니다. WAV 파일을 확인해주세요.")
+        return
+
+    # MR 파일과 음계 배열을 동시에 재생
+    play_notes_with_background(mr_audio_file, wav_files, notes_array)
+
+if __name__ == "__main__":
+    main()
+
+
+
