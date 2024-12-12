@@ -4,8 +4,6 @@ import numpy as np
 #MRStructure 의 bar는 코드 정보를 포함하는 2차원 배열
 #VocalStructure 의 line은 멜로디 정보를 포함하는 1차원 배열
 
-#모든 출력값들은 행은 마디, 열은 일단 한 박자 단위로 출력한다.
-
 class MRStructure:
     def __init__(self, MR_file = None, time_sig = None, key_sig = None, bpm = None, MR_slice = 4, bars = None):
         self.y, self.sr = lb.load(MR_file) if MR_file is not None else (None, None)
@@ -525,17 +523,18 @@ chroma_chord_table = {
 
 #====================================================================#
 
-MR_test = MRStructure(MR_file="sample\\sample_MR.mp3", time_sig='4/4', key_sig='C#', MR_slice=2)
-print(MR_test.bar)
-print(MR_test.tempo)
+# MR_test = MRStructure(MR_file="sample\\sample_MR.mp3", time_sig='4/4', key_sig='C#', MR_slice=2)
+# print(MR_test.bar)
+# print(MR_test.tempo)
 
-line = ['G#0', 'G#0', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'C#1', 'D#1','F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'C#1', 'C1', 'A#0', 'G#0', 'G#0','C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1','G#0', 'G#0', 'C#1', 'C#1', 'C#1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1'] 
+# line = ['G#0', 'G#0', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'C#1', 'D#1','F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'C#1', 'C1', 'A#0', 'G#0', 'G#0','C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1','G#0', 'G#0', 'C#1', 'C#1', 'C#1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1'] 
 
-test_vocal = VocalStructure(line = line ,time_sig='4/4', key_sig='C#', bpm = MR_test.tempo, Vocal_slice=2)
+# test_vocal = VocalStructure(line = line ,time_sig='4/4', key_sig='C#', bpm = MR_test.tempo, Vocal_slice=2)
 
-sampled_MR = Synchronize(MR_test, test_vocal, [0,6])
-print(sampled_MR)
+# sampled_MR = Synchronize(MR_test, test_vocal, [0,6])
+# print(sampled_MR)
 
-print(test_vocal.chorus_generator(sampled_MR=sampled_MR))
+# chorus_line = test_vocal.chorus_generator(sampled_MR=sampled_MR)
+# print(chorus_line)
 
 #====================================================================#
