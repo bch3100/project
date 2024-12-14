@@ -300,7 +300,7 @@ def pitch_detector(chroma_sum, y, sr):
 
     if f0 and f0 > 0:
         try:
-            octave = int(np.log2(f0 / 440.0))
+            octave = int(np.log2(f0 / 440.0) + 1)
         except (ValueError, OverflowError):
             octave = "Unknown"
     else:
@@ -522,19 +522,21 @@ chroma_chord_table = {
 
 
 #====================================================================#
+
 MR_test = MRStructure(MR_file="sample\\sample_MR.mp3", time_sig='4/4', key_sig='C#', MR_slice=2)
-#print(MR_test.bar)
-#print(MR_test.tempo)
+# print(MR_test.bar)
+# print(MR_test.tempo)
 
-line = ['G#0', 'G#0', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'C#1', 'D#1','F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'C#1', 'C1', 'A#0', 'G#0', 'G#0','C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1','G#0', 'G#0', 'C#1', 'C#1', 'C#1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1'] 
-
-test_vocal = VocalStructure(line = line ,time_sig='4/4', key_sig='C#', bpm = MR_test.tempo, Vocal_slice=2)
+line = ['G#1', 'G#1', 'C#2', 'C#2', 'C2', 'C#2', 'D#2', 'D#2', 'C#2', 'D#2', 'F2', 'F2', 'F#2', 'F2', 'A#1', 'A#1', 'D#2', 'D#2', 'C#2', 'C#2', 'C#2', 'C#2', 'C2', 'C2', 'A#1', 'C2', 'C#2', 'C#2', 'C#2', 'C#2', 'C#2', 'C#2', 'C#2', 'F2', 'G#2', 'G#2', 'F2', 'D#2', 'C#2', 'C#2', 'C2', 'C#2', 'D#2', 'C#2', 'C2', 'A#1', 'G#1', 'G#1', 'C#2', 'F2', 'G#2', 'G#2', 'F2', 'D#2', 'C#2', 'C#2', 'C2', 'C#2', 'D#2', 'D#2', 'D#2', 'D#2', 'D#2', 'D#2', 'G#1', 'G#1', 'C#2', 'C#2', 'C#2', 'C#2', 'D#2', 'D#2', 'D#2', 'D#2', 'F2', 'F2', 'F#2', 'F2', 'A#1', 'A#1', 'D#2', 'D#2', 'C#2', 'C#2', 'C#2', 'C#2', 'C2', 'C2', 'A#1', 'C2', 'C#2', 'C#2', 'C#2', 'C#2', 'C#2', 'C#2']
+test_vocal = VocalStructure(line=line ,time_sig='4/4', key_sig='C#', bpm = MR_test.tempo, Vocal_slice=2)
 
 sampled_MR = Synchronize(MR_test, test_vocal, [0,6])
-#print(sampled_MR)
+# print(sampled_MR)
 
 chorus_line = test_vocal.chorus_generator(sampled_MR=sampled_MR)
-#print(chorus_line)
+# print(chorus_line)
+
+# result = [None, None, 'F1', 'F1', 'F1', 'F1', 'G#1', 'G#1', 'G#1', 'G#1', 'A#1', 'A#1', 'A#1', 'A#1', 'F#1', 'F#1', 'F#1', 'F#1', 'D#1', 'D#1', 'D#1', 'D#1', 'G#1', 'G#1', 'G#1', 'G#1', 'F#1', 'F#1', 'F#1', 'F#1', 'F1', 'F1', 'F1', 'C#2', 'F2', 'F2', 'G#1', 'F1', 'F#1', 'F#1', 'F#1', 'F#1', 'G1', 'D#1', 'D#1', 'D#1', 'C1', 'C1', 'G#1', 'G#1', 'F2', 'F2', 'G#1', 'F1', 'A#1', 'A#1', 'A#1', 'A#1', 'G1', 'G1', 'G1', 'G1', 'G#1', 'G#1', 'C1', 'C1', 'F1', 'F1', 'F1', 'F1', 'G#1', 'G#1', 'G#1', 'G#1', 'A#1', 'A#1', 'A#1', 'A#1', 'F#1', 'F#1', 'F#1', 'F#1', 'D#1', 'D#1', 'D#1', 'D#1', 'G#1', 'G#1', 'G#1', 'G#1', 'F#1', 'F#1', 'F#1', 'F#1', 'F1', 'F1']
 
 with open("chorus.txt","w") as file:
     file.write(str(chorus_line))
