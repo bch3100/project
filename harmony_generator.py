@@ -523,17 +523,21 @@ chroma_chord_table = {
 
 #====================================================================#
 MR_test = MRStructure(MR_file="sample\\sample_MR.mp3", time_sig='4/4', key_sig='C#', MR_slice=2)
-print(MR_test.bar)
-print(MR_test.tempo)
+#print(MR_test.bar)
+#print(MR_test.tempo)
 
 line = ['G#0', 'G#0', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'C#1', 'D#1','F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'C#1', 'C1', 'A#0', 'G#0', 'G#0','C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1','G#0', 'G#0', 'C#1', 'C#1', 'C#1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1'] 
 
 test_vocal = VocalStructure(line = line ,time_sig='4/4', key_sig='C#', bpm = MR_test.tempo, Vocal_slice=2)
 
 sampled_MR = Synchronize(MR_test, test_vocal, [0,6])
-print(sampled_MR)
+#print(sampled_MR)
 
 chorus_line = test_vocal.chorus_generator(sampled_MR=sampled_MR)
-print(chorus_line)
+#print(chorus_line)
+
+with open("chorus.txt","w") as file:
+    file.write(str(chorus_line))
+print("저장되었습니다")
 
 #====================================================================#

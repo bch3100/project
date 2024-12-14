@@ -1,19 +1,7 @@
 import os
 import time
 import simpleaudio as sa
-
-# 음계 리스트
-twinkle_star_notes = [
-    'G#0', 'G#0', 'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'C#1', 'D#1',
-    'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1',
-    'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1',
-    'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1', 'C#1', 'C#1', 'C1', 'C#1', 'D#1',
-    'C#1', 'C1', 'A#0', 'G#0', 'G#0', 'C#1', 'F1', 'G#1', 'G#1', 'F1', 'D#1',
-    'C#1', 'C#1', 'C1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1', 'D#1',
-    'G#0', 'G#0', 'C#1', 'C#1', 'C#1', 'C#1', 'D#1', 'D#1', 'D#1', 'D#1',
-    'F1', 'F1', 'F#1', 'F1', 'A#0', 'A#0', 'D#1', 'D#1', 'C#1', 'C#1', 'C#1',
-    'C#1', 'C1', 'C1', 'A#0', 'C1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1', 'C#1'
-]
+import ast
 
 def get_wav_files(directory):
     """지정된 디렉토리에서 .wav 파일 경로를 반환"""
@@ -23,6 +11,13 @@ def get_wav_files(directory):
             note = os.path.splitext(file)[0]  # 파일 이름에서 확장자 제거
             wav_files[note.upper()] = os.path.join(directory, file)
     return wav_files
+
+def load_array_from_file():
+    # 텍스트 파일에서 배열 읽기
+    with open("chorus.txt", "r") as file:
+        data = file.read()
+        array = ast.literal_eval(data)  
+    return array
 
 def play_notes_with_background(mr_file, wav_files, notes, interval=0.465):
     """MR 파일과 음계 리스트를 동시에 재생"""
@@ -67,8 +62,10 @@ if __name__ == "__main__":
     # 음계 파일 불러오기
     wav_files = get_wav_files(directory)
 
+    chorus_line = load_array_from_file()
+
     if not wav_files:
         print("No wav files found in the directory.")
     else:
         # MR과 음계를 동시에 재생
-        play_notes_with_background(mr_file, wav_files, twinkle_star_notes, interval=0.5)
+        play_notes_with_background(mr_file, wav_files, chorus_line, interval=0.5)
