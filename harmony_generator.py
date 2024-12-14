@@ -4,8 +4,6 @@ import numpy as np
 #MRStructure 의 bar는 코드 정보를 포함하는 2차원 배열
 #VocalStructure 의 line은 멜로디 정보를 포함하는 1차원 배열
 
-#모든 출력값들은 행은 마디, 열은 일단 한 박자 단위로 출력한다.
-
 class MRStructure:
     def __init__(self, MR_file = None, time_sig = None, key_sig = None, bpm = None, MR_slice = 4, bars = None):
         self.y, self.sr = lb.load(MR_file) if MR_file is not None else (None, None)
@@ -524,7 +522,6 @@ chroma_chord_table = {
 
 
 #====================================================================#
-
 MR_test = MRStructure(MR_file="sample\\sample_MR.mp3", time_sig='4/4', key_sig='C#', MR_slice=2)
 print(MR_test.bar)
 print(MR_test.tempo)
@@ -536,6 +533,7 @@ test_vocal = VocalStructure(line = line ,time_sig='4/4', key_sig='C#', bpm = MR_
 sampled_MR = Synchronize(MR_test, test_vocal, [0,6])
 print(sampled_MR)
 
-print(test_vocal.chorus_generator(sampled_MR=sampled_MR))
+chorus_line = test_vocal.chorus_generator(sampled_MR=sampled_MR)
+print(chorus_line)
 
 #====================================================================#
