@@ -55,9 +55,10 @@ def play_notes_with_background(mr_file, wav_files, notes, interval=0.465):
     mr_play_obj.wait_done()
 
 if __name__ == "__main__":
-    # 음계 파일 디렉토리와 MR 파일 경로
-    directory = r"C:\\Users\\USER\\Desktop\\opensource\\project\\Music\\Guitar"
-    mr_file = r"C:\\Users\\USER\\Desktop\\opensource\\project\\MR\\MR.wav"
+    # 현재 스크립트 경로 기준으로 디렉토리 설정
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    directory = os.path.join(base_path, "Music", "Guitar")
+    mr_file = os.path.join(base_path, "MR", "MR.wav")
     
     # 음계 파일 불러오기
     wav_files = get_wav_files(directory)
