@@ -38,6 +38,8 @@ def play_notes_with_background(mr_file, wav_files, notes, interval=0.465):
             wave_obj = sa.WaveObject.from_wave_file(wav_files[note])
             play_obj = wave_obj.play()
             play_objects.append(play_obj)
+        else:
+            print(f"Note {note} not found in wav files.")
         
         # 다음 음표 재생 간격 유지
         next_time = start_time + (i + 1) * interval
